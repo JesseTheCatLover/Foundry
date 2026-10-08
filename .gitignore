@@ -1,0 +1,8 @@
+/build/
+/Build/
+/cmake-build-debug/
+/cmake-build-release/
+.cache/
+.DS_Store
+/.idea
+/cmake-build-release-mingw
