@@ -17,6 +17,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/BuildSystem/FoundryModule.cmake)
 
 add_subdirectory(Source/Lexer)
 add_subdirectory(Source/Parser)
+add_subdirectory(Source/Semantic)
 
 # ---------------- Foundry ----------------
 

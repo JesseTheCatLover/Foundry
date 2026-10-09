@@ -2,6 +2,7 @@
 
 #include <Lexer.h>
 #include <Parser.h>
+#include <SemanticAnalyzer.h>
 #include <Token.h>
 
 #include <cstddef>
@@ -81,10 +82,7 @@ cmake
         Foundry::Lexer lexer(source);
         const auto tokens = lexer.tokenize();
 
-        Require(
-            tokens.size() == 2,
-            "CMake block should produce one token and EOF."
-        );
+        Require(tokens.size() == 2, "CMake block should produce one token and EOF.");
 
         Require(
             tokens[0].type == Foundry::ETokenType::CMakeBlock,
@@ -129,122 +127,47 @@ $ configure(TARGET, KIND):
         Foundry::Parser parser(tokens);
         const Foundry::FFoundryFile file = parser.Parse();
 
-        Require(
-            file.declarations.size() == 2,
-            "Expected two declarations."
-        );
+        Require(file.declarations.size() == 2, "Expected two declarations.");
 
-        const auto* entity =
-            std::get_if<Foundry::FEntity>(&file.declarations[0]);
+        const auto* entity = std::get_if<Foundry::FEntity>(&file.declarations[0]);
 
         Require(entity != nullptr, "First declaration should be an entity.");
         Require(entity->type == "Module", "Unexpected entity type.");
         Require(entity->name == "Engine", "Unexpected entity name.");
+        Require(entity->instructions.size() == 3, "Expected three entity instructions.");
 
-        Require(
-            entity->instructions.size() == 3,
-            "Expected three entity instructions."
-        );
-
-        const auto* typeCall =
-            std::get_if<Foundry::FCall>(&entity->instructions[0]);
+        const auto* typeCall = std::get_if<Foundry::FCall>(&entity->instructions[0]);
 
         Require(typeCall != nullptr, "Expected a Call instruction.");
         Require(typeCall->name == "type", "Unexpected call name.");
+        Require(typeCall->arguments.size() == 1, "Expected one type argument.");
+        Require(typeCall->arguments[0] == "static_library", "Unexpected type argument.");
 
-        Require(
-            typeCall->arguments.size() == 1,
-            "Expected one type argument."
-        );
-
-        Require(
-            typeCall->arguments[0] == "static_library",
-            "Unexpected type argument."
-        );
-
-        const auto* dependencyCall =
-            std::get_if<Foundry::FCall>(&entity->instructions[1]);
+        const auto* dependencyCall = std::get_if<Foundry::FCall>(&entity->instructions[1]);
 
         Require(dependencyCall != nullptr, "Expected dependency Call.");
+        Require(dependencyCall->name == "public_dependency", "Unexpected dependency call.");
+        Require(dependencyCall->arguments.size() == 2, "Expected two dependencies.");
+        Require(dependencyCall->arguments[0] == "glad", "Unexpected first dependency.");
+        Require(dependencyCall->arguments[1] == "glfw", "Unexpected second dependency.");
 
-        Require(
-            dependencyCall->name == "public_dependency",
-            "Unexpected dependency call."
-        );
+        const auto* function = std::get_if<Foundry::FFunctionDefinition>(&file.declarations[1]);
 
-        Require(
-            dependencyCall->arguments.size() == 2,
-            "Expected two dependencies."
-        );
+        Require(function != nullptr, "Second declaration should be a function.");
+        Require(function->name == "configure", "Unexpected function name.");
+        Require(function->parameters.size() == 2, "Expected two function parameters.");
+        Require(function->parameters[0] == "TARGET", "Unexpected first parameter.");
+        Require(function->parameters[1] == "KIND", "Unexpected second parameter.");
+        Require(function->instructions.size() == 2, "Expected two function instructions.");
 
-        Require(
-            dependencyCall->arguments[0] == "glad",
-            "Unexpected first dependency."
-        );
+        const auto* functionCall = std::get_if<Foundry::FCall>(&function->instructions[0]);
 
-        Require(
-            dependencyCall->arguments[1] == "glfw",
-            "Unexpected second dependency."
-        );
+        Require(functionCall != nullptr, "Expected a function-body Call.");
+        Require(functionCall->name == "set_target", "Unexpected function-body call.");
 
-        const auto* function =
-            std::get_if<Foundry::FFunctionDefinition>(
-                &file.declarations[1]
-            );
+        const auto* cmakeBlock = std::get_if<Foundry::FCMakeBlock>(&function->instructions[1]);
 
-        Require(
-            function != nullptr,
-            "Second declaration should be a function."
-        );
-
-        Require(
-            function->name == "configure",
-            "Unexpected function name."
-        );
-
-        Require(
-            function->parameters.size() == 2,
-            "Expected two function parameters."
-        );
-
-        Require(
-            function->parameters[0] == "TARGET",
-            "Unexpected first parameter."
-        );
-
-        Require(
-            function->parameters[1] == "KIND",
-            "Unexpected second parameter."
-        );
-
-        Require(
-            function->instructions.size() == 2,
-            "Expected two function instructions."
-        );
-
-        const auto* functionCall =
-            std::get_if<Foundry::FCall>(&function->instructions[0]);
-
-        Require(
-            functionCall != nullptr,
-            "Expected a function-body Call."
-        );
-
-        Require(
-            functionCall->name == "set_target",
-            "Unexpected function-body call."
-        );
-
-        const auto* cmakeBlock =
-            std::get_if<Foundry::FCMakeBlock>(
-                &function->instructions[1]
-            );
-
-        Require(
-            cmakeBlock != nullptr,
-            "Expected a CMakeBlock instruction."
-        );
-
+        Require(cmakeBlock != nullptr, "Expected a CMakeBlock instruction.");
         Require(
             cmakeBlock->source.find("message") != std::string_view::npos,
             "Expected original CMake contents."
@@ -278,9 +201,7 @@ $ configure(TARGET, KIND):
             return;
         }
 
-        throw std::runtime_error(
-            "Parser accepted a call without a semicolon."
-        );
+        throw std::runtime_error("Parser accepted a call without a semicolon.");
     }
 
     void TestFunctionRequiresIndentation()
@@ -310,21 +231,110 @@ $ configure(TARGET, KIND):
             return;
         }
 
-        throw std::runtime_error(
-            "Parser accepted an unindented function body."
+        throw std::runtime_error("Parser accepted an unindented function body.");
+    }
+
+    void TestFunctionRegistry()
+    {
+        constexpr std::string_view source = R"(
+# Module(Engine):
+type(static_library);
+
+$ configure(TARGET):
+    configure_target(TARGET);
+
+$ enable_reflection():
+    cmake
+    {
+        message("Reflection enabled")
+    }
+)";
+
+        Foundry::Lexer lexer(source);
+        const auto tokens = lexer.tokenize();
+
+        Foundry::Parser parser(tokens);
+        const Foundry::FFoundryFile file = parser.Parse();
+
+        Foundry::SemanticAnalyzer analyzer(file);
+        const Foundry::FSemanticModel model = analyzer.Analyze();
+
+        Require(model.GetFunctionCount() == 2, "Expected two registered functions.");
+
+        const auto* configure = model.FindFunction("configure");
+
+        Require(configure != nullptr, "Expected configure function to be registered.");
+        Require(configure->parameters.size() == 1, "Expected one configure parameter.");
+        Require(configure->parameters[0] == "TARGET", "Unexpected configure parameter.");
+        Require(configure->instructions.size() == 1, "Expected one configure instruction.");
+
+        const auto* reflection = model.FindFunction("enable_reflection");
+
+        Require(reflection != nullptr, "Expected enable_reflection to be registered.");
+        Require(reflection->parameters.empty(), "Expected no reflection parameters.");
+        Require(reflection->instructions.size() == 1, "Expected one reflection instruction.");
+
+        const auto* cmakeBlock = std::get_if<Foundry::FCMakeBlock>(&reflection->instructions[0]);
+
+        Require(cmakeBlock != nullptr, "Expected the reflection body to contain a CMake block.");
+        Require(
+            cmakeBlock->source.find("Reflection enabled") != std::string_view::npos,
+            "Expected the original function body to be preserved."
+        );
+
+        Require(
+            model.FindFunction("unknown_function") == nullptr,
+            "Unknown function should not resolve."
         );
     }
 
-    void RunTest(
-        std::string_view name,
-        void (*test)(),
-        std::size_t& failures
-    )
+    void TestDuplicateFunctionDefinition()
+    {
+        constexpr std::string_view source = R"(
+$ setup():
+    initialize();
+
+$ setup():
+    configure();
+)";
+
+        Foundry::Lexer lexer(source);
+        const auto tokens = lexer.tokenize();
+
+        Foundry::Parser parser(tokens);
+        const Foundry::FFoundryFile file = parser.Parse();
+
+        Foundry::SemanticAnalyzer analyzer(file);
+
+        try
+        {
+            static_cast<void>(analyzer.Analyze());
+        }
+        catch (const std::runtime_error& exception)
+        {
+            Require(
+                std::string_view(exception.what()).find(
+                    "Duplicate function definition 'setup'."
+                ) != std::string_view::npos,
+                "Unexpected duplicate function diagnostic."
+            );
+
+            Require(
+                std::string_view(exception.what()).find("First definition at") != std::string_view::npos,
+                "Diagnostic should identify the first definition."
+            );
+
+            return;
+        }
+
+        throw std::runtime_error("Semantic analyzer accepted duplicate function definitions.");
+    }
+
+    void RunTest(std::string_view name, void (*test)(), std::size_t& failures)
     {
         try
         {
             test();
-
             std::cout << "[PASS] " << name << '\n';
         }
         catch (const std::exception& exception)
@@ -343,6 +353,7 @@ $ configure(TARGET, KIND):
 
 int main()
 {
+    constexpr std::size_t testCount = 7;
     std::size_t failures = 0;
 
     RunTest("Lexer tokens and locations", TestLexerTokens, failures);
@@ -350,12 +361,16 @@ int main()
     RunTest("Parser AST", TestParserAST, failures);
     RunTest("Parser rejects missing semicolon", TestParserMissingSemicolon, failures);
     RunTest("Function body requires indentation", TestFunctionRequiresIndentation, failures);
+    RunTest("Semantic function registry", TestFunctionRegistry, failures);
+    RunTest("Semantic duplicate function definitions", TestDuplicateFunctionDefinition, failures);
 
     std::cout
         << '\n'
         << "Tests passed: "
-        << (5 - failures)
-        << "/5\n";
+        << (testCount - failures)
+        << "/"
+        << testCount
+        << '\n';
 
     return failures == 0 ? 0 : 1;
 }
