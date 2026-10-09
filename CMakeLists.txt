@@ -16,6 +16,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/BuildSystem/FoundryModule.cmake)
 # ---------------- Modules ----------------
 
 add_subdirectory(Source/Lexer)
+add_subdirectory(Source/Parser)
 
 # ---------------- Foundry ----------------
 
@@ -25,5 +26,5 @@ add_executable(Foundry
 
 target_link_libraries(Foundry
         PRIVATE
-        Lexer
+        Parser
 )

@@ -7,8 +7,8 @@
 #include <string_view>
 #include <vector>
 
-namespace Foundry {
-
+namespace Foundry
+{
     class Lexer
     {
     private:

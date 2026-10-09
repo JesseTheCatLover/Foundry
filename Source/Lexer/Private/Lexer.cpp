@@ -52,8 +52,7 @@ namespace Foundry {
     {
         while (!IsAtEnd())
         {
-            if (!std::isspace(
-                static_cast<unsigned char>(Peek())))
+            if (!std::isspace(static_cast<unsigned char>(Peek())))
             {
                 break;
             }
@@ -96,9 +95,7 @@ namespace Foundry {
         {
             const char character = Peek();
 
-            if (!std::isalnum(
-                    static_cast<unsigned char>(character)) &&
-                character != '_')
+            if (!std::isalnum(static_cast<unsigned char>(character)) && character != '_')
             {
                 break;
             }
