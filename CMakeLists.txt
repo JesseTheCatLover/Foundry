@@ -15,19 +15,17 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/BuildSystem/FoundryModule.cmake)
 
 # ---------------- Modules ----------------
 
-add_subdirectory(Source/Lexer)
-add_subdirectory(Source/Parser)
-add_subdirectory(Source/Semantic)
+add_subdirectory(Source/Core)
 
 # ---------------- Foundry ----------------
 
 add_executable(Foundry
-        Source/Main.cpp
+        Tests/Main.cpp
 )
 
 target_link_libraries(Foundry
         PRIVATE
-        Parser
+        Core
 )
 
 # ---------------- Tests ----------------

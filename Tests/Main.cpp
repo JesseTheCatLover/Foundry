@@ -1,10 +1,5 @@
 // Copyright 2026 JesseTheCatLover. All Rights Reserved.
 
-#include <Lexer.h>
-#include <Parser.h>
-#include <SemanticAnalyzer.h>
-#include <Token.h>
-
 #include <cstddef>
 #include <exception>
 #include <iostream>
@@ -13,6 +8,11 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+
+#include "Lexer/Lexer.h"
+#include "Lexer/Token.h"
+#include "Parser/Parser.h"
+#include "Semantic/SemanticAnalyzer.h"
 
 namespace
 {

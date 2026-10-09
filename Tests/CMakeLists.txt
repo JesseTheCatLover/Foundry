@@ -6,7 +6,7 @@ add_executable(FoundryTests
 
 target_link_libraries(FoundryTests
         PRIVATE
-        Semantic
+        Core
 )
 
 add_test(

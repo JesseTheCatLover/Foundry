@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include <AST.h>
-
 #include <cstddef>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+
+#include "Parser/AST.h"
 
 namespace Foundry
 {

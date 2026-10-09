@@ -4,7 +4,7 @@
 
 #include "AST.h"
 
-#include <Token.h>
+#include "Lexer/Token.h"
 
 #include <cstddef>
 #include <string_view>

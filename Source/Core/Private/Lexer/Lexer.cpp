@@ -1,6 +1,6 @@
 // Copyright 2026 JesseTheCatLover. All Rights Reserved.
 
-#include "Lexer.h"
+#include "Lexer/Lexer.h"
 
 #include <cctype>
 #include <stdexcept>

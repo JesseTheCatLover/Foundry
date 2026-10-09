@@ -1,6 +1,6 @@
 // Copyright 2026 JesseTheCatLover. All Rights Reserved.
 
-#include "SemanticAnalyzer.h"
+#include "Semantic/SemanticAnalyzer.h"
 
 #include <stdexcept>
 #include <string>
