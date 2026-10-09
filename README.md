@@ -57,6 +57,7 @@ This also establishes an important distinction: a project defines its modules, w
 ## One Project, Multiple Toolchains
 
 Foundry coordinates the tools your software already needs.
+Example:
 
 | Component | Toolchain | Purpose |
 |---|---|---|
