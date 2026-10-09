@@ -123,7 +123,7 @@ Foundry is designed to keep common configuration concise while allowing more com
 
 ### Reusable Build Functions
 
-Not every project needs the same build behavior. Instead of hardcoding every feature into Foundry, projects can define their own reusable functions.
+Not every project needs the same build behavior. Projects can define their own reusable functions.
 
 A function definition begins with `$`:
 
