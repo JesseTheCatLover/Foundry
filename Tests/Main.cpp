@@ -1,5 +1,10 @@
 // Copyright 2026 JesseTheCatLover. All Rights Reserved.
 
+#include <Lexer/Lexer.h>
+#include <Lexer/Token.h>
+#include <Parser/Parser.h>
+#include <Semantic/SemanticAnalyzer.h>
+
 #include <cstddef>
 #include <exception>
 #include <iostream>
@@ -8,11 +13,6 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-
-#include "Lexer/Lexer.h"
-#include "Lexer/Token.h"
-#include "Parser/Parser.h"
-#include "Semantic/SemanticAnalyzer.h"
 
 namespace
 {
@@ -330,6 +330,115 @@ $ setup():
         throw std::runtime_error("Semantic analyzer accepted duplicate function definitions.");
     }
 
+    void TestSemanticFunctionResolution()
+    {
+        constexpr std::string_view source = R"(
+# Module(Engine):
+configure(Engine);
+
+$ configure(TARGET):
+    configure_target(TARGET);
+)";
+
+        Foundry::Lexer lexer(source);
+        const auto tokens = lexer.tokenize();
+
+        Foundry::Parser parser(tokens);
+        const Foundry::FFoundryFile file = parser.Parse();
+
+        Foundry::SemanticAnalyzer analyzer(file);
+        const Foundry::FSemanticModel model = analyzer.Analyze();
+
+        const auto* entity = std::get_if<Foundry::FEntity>(&file.declarations[0]);
+
+        Require(entity != nullptr, "Expected a Module entity.");
+
+        const auto* call = std::get_if<Foundry::FCall>(&entity->instructions[0]);
+
+        Require(call != nullptr, "Expected a function call.");
+
+        const Foundry::FFunctionDefinition* function = model.ResolveFunctionCall(*call);
+
+        Require(function != nullptr, "Expected configure to resolve.");
+        Require(function->name == "configure", "Unexpected resolved function.");
+        Require(function->parameters.size() == 1, "Expected one parameter.");
+        Require(function->parameters[0] == "TARGET", "Unexpected parameter name.");
+    }
+
+    void TestSemanticRejectsTooFewArguments()
+    {
+        constexpr std::string_view source = R"(
+# Module(Engine):
+configure();
+
+$ configure(TARGET):
+    configure_target(TARGET);
+)";
+
+        Foundry::Lexer lexer(source);
+        const auto tokens = lexer.tokenize();
+
+        Foundry::Parser parser(tokens);
+        const Foundry::FFoundryFile file = parser.Parse();
+
+        Foundry::SemanticAnalyzer analyzer(file);
+
+        try
+        {
+            static_cast<void>(analyzer.Analyze());
+        }
+        catch (const std::runtime_error& exception)
+        {
+            Require(
+                std::string_view(exception.what()).find(
+                    "expects 1 argument, but received 0 arguments."
+                ) != std::string_view::npos,
+                "Unexpected argument-count diagnostic."
+            );
+
+            return;
+        }
+
+        throw std::runtime_error("Semantic analyzer accepted too few arguments.");
+    }
+
+    void TestSemanticRejectsTooManyArguments()
+    {
+        constexpr std::string_view source = R"(
+# Module(Engine):
+configure(Engine, Editor);
+
+$ configure(TARGET):
+    configure_target(TARGET);
+)";
+
+        Foundry::Lexer lexer(source);
+        const auto tokens = lexer.tokenize();
+
+        Foundry::Parser parser(tokens);
+        const Foundry::FFoundryFile file = parser.Parse();
+
+        Foundry::SemanticAnalyzer analyzer(file);
+
+        try
+        {
+            static_cast<void>(analyzer.Analyze());
+        }
+        catch (const std::runtime_error& exception)
+        {
+            Require(
+                std::string_view(exception.what()).find(
+                    "expects 1 argument, but received 2 arguments."
+                ) != std::string_view::npos,
+                "Unexpected argument-count diagnostic."
+            );
+
+            return;
+        }
+
+        throw std::runtime_error("Semantic analyzer accepted too many arguments.");
+    }
+
     void RunTest(std::string_view name, void (*test)(), std::size_t& failures)
     {
         try
@@ -353,7 +462,7 @@ $ setup():
 
 int main()
 {
-    constexpr std::size_t testCount = 7;
+    constexpr std::size_t testCount = 10;
     std::size_t failures = 0;
 
     RunTest("Lexer tokens and locations", TestLexerTokens, failures);
@@ -363,6 +472,9 @@ int main()
     RunTest("Function body requires indentation", TestFunctionRequiresIndentation, failures);
     RunTest("Semantic function registry", TestFunctionRegistry, failures);
     RunTest("Semantic duplicate function definitions", TestDuplicateFunctionDefinition, failures);
+    RunTest("Semantic function resolution", TestSemanticFunctionResolution, failures);
+    RunTest("Semantic rejects too few arguments", TestSemanticRejectsTooFewArguments, failures);
+    RunTest("Semantic rejects too many arguments", TestSemanticRejectsTooManyArguments, failures);
 
     std::cout
         << '\n'

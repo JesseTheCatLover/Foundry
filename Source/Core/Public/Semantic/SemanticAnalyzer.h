@@ -2,12 +2,12 @@
 
 #pragma once
 
+#include <Parser/AST.h>
+
 #include <cstddef>
 #include <string>
 #include <string_view>
 #include <unordered_map>
-
-#include "Parser/AST.h"
 
 namespace Foundry
 {
@@ -22,6 +22,8 @@ namespace Foundry
 
     public:
         [[nodiscard]] const FFunctionDefinition* FindFunction(std::string_view name) const;
+
+        [[nodiscard]] const FFunctionDefinition* ResolveFunctionCall(const FCall& call) const;
 
         [[nodiscard]] std::size_t GetFunctionCount() const;
     };
