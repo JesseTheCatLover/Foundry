@@ -28,3 +28,11 @@ target_link_libraries(Foundry
         PRIVATE
         Parser
 )
+
+# ---------------- Tests ----------------
+
+include(CTest)
+
+if(BUILD_TESTING)
+    add_subdirectory(Tests)
+endif()
