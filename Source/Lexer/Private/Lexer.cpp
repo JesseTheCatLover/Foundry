@@ -70,8 +70,8 @@ namespace Foundry {
             Advance();
     }
 
-    Token Lexer::MakeToken(
-        TokenType type,
+    FToken Lexer::MakeToken(
+        ETokenType type,
         std::size_t start,
         std::size_t line,
         std::size_t column
@@ -85,7 +85,7 @@ namespace Foundry {
         };
     }
 
-    Token Lexer::Identifier()
+    FToken Lexer::Identifier()
     {
         const std::size_t start = m_Position;
         const std::size_t line = m_Line;
@@ -104,14 +104,14 @@ namespace Foundry {
         }
 
         return MakeToken(
-            TokenType::Identifier,
+            ETokenType::Identifier,
             start,
             line,
             column
         );
     }
 
-    Token Lexer::String()
+    FToken Lexer::String()
     {
         const std::size_t start = m_Position;
         const std::size_t line = m_Line;
@@ -138,7 +138,7 @@ namespace Foundry {
                 Advance();
 
                 return MakeToken(
-                    TokenType::String,
+                    ETokenType::String,
                     start,
                     line,
                     column
@@ -151,7 +151,7 @@ namespace Foundry {
         Error("Unterminated string literal.");
     }
 
-    Token Lexer::Number()
+    FToken Lexer::Number()
     {
         const std::size_t start = m_Position;
         const std::size_t line = m_Line;
@@ -189,7 +189,7 @@ namespace Foundry {
         }
 
         return MakeToken(
-            TokenType::Number,
+            ETokenType::Number,
             start,
             line,
             column
@@ -239,7 +239,7 @@ namespace Foundry {
         return m_Source[position] == '{';
     }
 
-    Token Lexer::CMakeBlock()
+    FToken Lexer::CMakeBlock()
     {
         const std::size_t start = m_Position;
         const std::size_t line = m_Line;
@@ -315,7 +315,7 @@ namespace Foundry {
             Error("Unterminated cmake block.");
 
         return MakeToken(
-            TokenType::CMakeBlock,
+            ETokenType::CMakeBlock,
             start,
             line,
             column
@@ -335,9 +335,9 @@ namespace Foundry {
         );
     }
 
-    std::vector<Token> Lexer::tokenize()
+    std::vector<FToken> Lexer::tokenize()
     {
-        std::vector<Token> tokens;
+        std::vector<FToken> tokens;
 
         while (!IsAtEnd())
         {
@@ -368,7 +368,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::Hash,
+                            ETokenType::Hash,
                             start,
                             line,
                             column
@@ -380,7 +380,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::Dollar,
+                            ETokenType::Dollar,
                             start,
                             line,
                             column
@@ -392,7 +392,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::LeftParen,
+                            ETokenType::LeftParen,
                             start,
                             line,
                             column
@@ -404,7 +404,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::RightParen,
+                            ETokenType::RightParen,
                             start,
                             line,
                             column
@@ -416,7 +416,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::LeftBrace,
+                            ETokenType::LeftBrace,
                             start,
                             line,
                             column
@@ -428,7 +428,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::RightBrace,
+                            ETokenType::RightBrace,
                             start,
                             line,
                             column
@@ -440,7 +440,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::Colon,
+                            ETokenType::Colon,
                             start,
                             line,
                             column
@@ -452,7 +452,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::Semicolon,
+                            ETokenType::Semicolon,
                             start,
                             line,
                             column
@@ -464,7 +464,7 @@ namespace Foundry {
                     Advance();
                     tokens.push_back(
                         MakeToken(
-                            TokenType::Comma,
+                            ETokenType::Comma,
                             start,
                             line,
                             column
@@ -502,7 +502,7 @@ namespace Foundry {
         }
 
         tokens.push_back({
-            TokenType::EndOfFile,
+            ETokenType::EndOfFile,
             {},
             m_Line,
             m_Column

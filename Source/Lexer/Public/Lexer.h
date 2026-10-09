@@ -21,7 +21,7 @@ namespace Foundry
     public:
         explicit Lexer(std::string_view source);
 
-        [[nodiscard]] std::vector<Token> tokenize();
+        [[nodiscard]] std::vector<FToken> tokenize();
 
     private:
         [[nodiscard]] char Peek(std::size_t offset = 0) const;
@@ -34,22 +34,22 @@ namespace Foundry
         void SkipWhitespace();
         void SkipComment();
 
-        [[nodiscard]] Token MakeToken(
-            TokenType type,
+        [[nodiscard]] FToken MakeToken(
+            ETokenType type,
             std::size_t start,
             std::size_t line,
             std::size_t column
         ) const;
 
-        [[nodiscard]] Token Identifier();
+        [[nodiscard]] FToken Identifier();
 
-        [[nodiscard]] Token String();
+        [[nodiscard]] FToken String();
 
-        [[nodiscard]] Token Number();
+        [[nodiscard]] FToken Number();
 
         [[nodiscard]] bool IsCMakeBlock() const;
 
-        [[nodiscard]] Token CMakeBlock();
+        [[nodiscard]] FToken CMakeBlock();
 
         [[noreturn]] void Error(std::string_view message) const;
     };

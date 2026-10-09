@@ -15,26 +15,26 @@ namespace Foundry
     class Parser
     {
     private:
-        const std::vector<Token>& m_Tokens;
+        const std::vector<FToken>& m_Tokens;
 
         std::size_t m_Position = 0;
 
     public:
-        explicit Parser(const std::vector<Token>& tokens);
+        explicit Parser(const std::vector<FToken>& tokens);
 
         [[nodiscard]] FFoundryFile Parse();
 
     private:
-        [[nodiscard]] const Token& Peek(std::size_t offset = 0) const;
+        [[nodiscard]] const FToken& Peek(std::size_t offset = 0) const;
 
-        const Token& Advance();
+        const FToken& Advance();
 
         [[nodiscard]] bool IsAtEnd() const;
 
-        bool Match(TokenType type);
+        bool Match(ETokenType type);
 
-        [[nodiscard]] const Token& Consume(
-            TokenType type,
+        [[nodiscard]] const FToken& Consume(
+            ETokenType type,
             std::string_view message
         );
 
@@ -47,7 +47,7 @@ namespace Foundry
         [[nodiscard]] FCall ParseCall();
 
         [[noreturn]] void Error(
-            const Token& token,
+            const FToken& token,
             std::string_view message
         ) const;
     };

@@ -7,7 +7,7 @@
 
 namespace Foundry {
 
-    enum class TokenType {
+    enum class ETokenType {
         Hash,
         Dollar,
 
@@ -30,29 +30,29 @@ namespace Foundry {
         EndOfFile
     };
 
-    [[nodiscard]] constexpr std::string_view TokenTypeToString(TokenType type) {
+    [[nodiscard]] constexpr std::string_view TokenTypeToString(ETokenType type) {
         switch (type) {
-            case TokenType::Hash:        return "Hash";
-            case TokenType::Dollar:      return "Dollar";
-            case TokenType::LeftParen:   return "LeftParen";
-            case TokenType::RightParen:  return "RightParen";
-            case TokenType::LeftBrace:   return "LeftBrace";
-            case TokenType::RightBrace:  return "RightBrace";
-            case TokenType::Colon:       return "Colon";
-            case TokenType::Semicolon:   return "Semicolon";
-            case TokenType::Comma:       return "Comma";
-            case TokenType::Identifier:  return "Identifier";
-            case TokenType::String:      return "String";
-            case TokenType::Number:      return "Number";
-            case TokenType::CMakeBlock:  return "CMakeBlock";
-            case TokenType::EndOfFile:   return "EndOfFile";
+            case ETokenType::Hash:        return "Hash";
+            case ETokenType::Dollar:      return "Dollar";
+            case ETokenType::LeftParen:   return "LeftParen";
+            case ETokenType::RightParen:  return "RightParen";
+            case ETokenType::LeftBrace:   return "LeftBrace";
+            case ETokenType::RightBrace:  return "RightBrace";
+            case ETokenType::Colon:       return "Colon";
+            case ETokenType::Semicolon:   return "Semicolon";
+            case ETokenType::Comma:       return "Comma";
+            case ETokenType::Identifier:  return "Identifier";
+            case ETokenType::String:      return "String";
+            case ETokenType::Number:      return "Number";
+            case ETokenType::CMakeBlock:  return "CMakeBlock";
+            case ETokenType::EndOfFile:   return "EndOfFile";
         }
 
         return "Unknown";
     }
 
-    struct Token {
-        TokenType type;
+    struct FToken {
+        ETokenType type;
         std::string_view value;
 
         std::size_t line;
