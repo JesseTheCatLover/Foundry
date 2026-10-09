@@ -22,7 +22,7 @@ namespace Foundry
     public:
         explicit Parser(const std::vector<Token>& tokens);
 
-        [[nodiscard]] std::vector<Entity> Parse();
+        [[nodiscard]] FFoundryFile Parse();
 
     private:
         [[nodiscard]] const Token& Peek(std::size_t offset = 0) const;
@@ -38,11 +38,13 @@ namespace Foundry
             std::string_view message
         );
 
-        [[nodiscard]] Entity ParseEntity();
+        [[nodiscard]] FEntity ParseEntity();
+
+        [[nodiscard]] FFunctionDefinition ParseFunction();
 
         [[nodiscard]] Instruction ParseInstruction();
 
-        [[nodiscard]] Call ParseCall();
+        [[nodiscard]] FCall ParseCall();
 
         [[noreturn]] void Error(
             const Token& token,

@@ -9,7 +9,7 @@
 
 namespace Foundry {
 
-    struct Call
+    struct FCall
     {
         std::string_view name;
         std::vector<std::string_view> arguments;
@@ -18,7 +18,7 @@ namespace Foundry {
         std::size_t column;
     };
 
-    struct CMakeBlock
+    struct FCMakeBlock
     {
         std::string_view source;
 
@@ -26,9 +26,9 @@ namespace Foundry {
         std::size_t column;
     };
 
-    using Instruction = std::variant<Call, CMakeBlock>;
+    using Instruction = std::variant<FCall, FCMakeBlock>;
 
-    struct Entity
+    struct FEntity
     {
         std::string_view type;
         std::string_view name;
@@ -37,6 +37,23 @@ namespace Foundry {
 
         std::size_t line;
         std::size_t column;
+    };
+
+    struct FFunctionDefinition
+    {
+        std::string_view name;
+        std::vector<std::string_view> parameters;
+        std::vector<Instruction> instructions;
+
+        std::size_t line;
+        std::size_t column;
+    };
+
+    using Declaration = std::variant<FEntity, FFunctionDefinition>;
+
+    struct FFoundryFile
+    {
+        std::vector<Declaration> declarations;
     };
 
 }

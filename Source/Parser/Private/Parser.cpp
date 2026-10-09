@@ -1,6 +1,6 @@
 // Copyright 2026 JesseTheCatLover. All Rights Reserved.
 
-#include "Parser.h"
+#include <Parser.h>
 
 #include <stdexcept>
 #include <string>
@@ -66,7 +66,7 @@ namespace Foundry
         Error(Peek(), message);
     }
 
-    Entity Parser::ParseEntity()
+    FEntity Parser::ParseEntity()
     {
         const Token& declaration = Consume(
             TokenType::Hash,
@@ -78,27 +78,27 @@ namespace Foundry
             "Expected entity type after '#'."
         );
 
-        Consume(
+        static_cast<void>(Consume(
             TokenType::LeftParen,
             "Expected '(' after entity type."
-        );
+        ));
 
         const Token& name = Consume(
             TokenType::Identifier,
             "Expected entity name."
         );
 
-        Consume(
+        static_cast<void>(Consume(
             TokenType::RightParen,
             "Expected ')' after entity name."
-        );
+        ));
 
-        Consume(
+        static_cast<void>(Consume(
             TokenType::Colon,
             "Expected ':' after entity declaration."
-        );
+        ));
 
-        Entity entity{
+        FEntity entity{
             type.value,
             name.value,
             {},
@@ -106,12 +106,90 @@ namespace Foundry
             declaration.column
         };
 
-        while (!IsAtEnd() && Peek().type != TokenType::Hash)
+        while (!IsAtEnd())
         {
+            const Token& token = Peek();
+
+            if ((token.type == TokenType::Hash ||
+                 token.type == TokenType::Dollar) &&
+                token.column <= declaration.column)
+            {
+                break;
+            }
+
             entity.instructions.push_back(ParseInstruction());
         }
 
         return entity;
+    }
+
+    FFunctionDefinition Parser::ParseFunction()
+    {
+        const Token& declaration = Consume(
+            TokenType::Dollar,
+            "Expected '$' to begin function definition."
+        );
+
+        const Token& name = Consume(
+            TokenType::Identifier,
+            "Expected function name after '$'."
+        );
+
+        static_cast<void>(Consume(
+            TokenType::LeftParen,
+            "Expected '(' after function name."
+        ));
+
+        std::vector<std::string_view> parameters;
+
+        if (!Match(TokenType::RightParen))
+        {
+            while (true)
+            {
+                const Token& parameter = Consume(
+                    TokenType::Identifier,
+                    "Expected parameter name."
+                );
+
+                parameters.push_back(parameter.value);
+
+                if (Match(TokenType::RightParen))
+                    break;
+
+                static_cast<void>(Consume(
+                    TokenType::Comma,
+                    "Expected ',' or ')' after parameter."
+                ));
+            }
+        }
+
+        const Token& colon = Consume(
+            TokenType::Colon,
+            "Expected ':' after function signature."
+        );
+
+        if (IsAtEnd() ||
+            Peek().line <= colon.line ||
+            Peek().column <= declaration.column)
+        {
+            Error(Peek(), "Expected an indented function body.");
+        }
+
+        FFunctionDefinition function{
+            name.value,
+            std::move(parameters),
+            {},
+            declaration.line,
+            declaration.column
+        };
+
+        while (!IsAtEnd() &&
+               Peek().column > declaration.column)
+        {
+            function.instructions.push_back(ParseInstruction());
+        }
+
+        return function;
     }
 
     Instruction Parser::ParseInstruction()
@@ -123,7 +201,7 @@ namespace Foundry
             const Token& block = Advance();
 
             return Instruction{
-                CMakeBlock{
+                FCMakeBlock{
                     block.value,
                     block.line,
                     block.column
@@ -139,20 +217,20 @@ namespace Foundry
             );
         }
 
-        return Instruction{ ParseCall() };
+        return Instruction{ParseCall()};
     }
 
-    Call Parser::ParseCall()
+    FCall Parser::ParseCall()
     {
         const Token& name = Consume(
             TokenType::Identifier,
             "Expected instruction name."
         );
 
-        Consume(
+        static_cast<void>(Consume(
             TokenType::LeftParen,
             "Expected '(' after instruction name."
-        );
+        ));
 
         std::vector<std::string_view> arguments;
 
@@ -177,19 +255,19 @@ namespace Foundry
                 if (Match(TokenType::RightParen))
                     break;
 
-                Consume(
+                static_cast<void>(Consume(
                     TokenType::Comma,
                     "Expected ',' or ')' after argument."
-                );
+                ));
             }
         }
 
-        Consume(
+        static_cast<void>(Consume(
             TokenType::Semicolon,
             "Expected ';' after instruction call."
-        );
+        ));
 
-        return Call{
+        return FCall{
             name.value,
             std::move(arguments),
             name.line,
@@ -197,7 +275,8 @@ namespace Foundry
         };
     }
 
-    [[noreturn]] void Parser::Error(
+    [[noreturn]]
+    void Parser::Error(
         const Token& token,
         std::string_view message
     ) const
@@ -212,24 +291,33 @@ namespace Foundry
         );
     }
 
-    std::vector<Entity> Parser::Parse()
+    FFoundryFile Parser::Parse()
     {
-        std::vector<Entity> entities;
+        FFoundryFile file;
 
         while (!IsAtEnd())
         {
-            if (Peek().type != TokenType::Hash)
+            if (Peek().type == TokenType::Hash)
+            {
+                file.declarations.push_back(
+                    Declaration{ParseEntity()}
+                );
+            }
+            else if (Peek().type == TokenType::Dollar)
+            {
+                file.declarations.push_back(
+                    Declaration{ParseFunction()}
+                );
+            }
+            else
             {
                 Error(
                     Peek(),
-                    "Expected an entity declaration."
+                    "Expected an entity declaration or function definition."
                 );
             }
-
-            entities.push_back(ParseEntity());
         }
 
-        return entities;
+        return file;
     }
-
 }
